@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
+import { useRef, useMemo, useCallback } from "react";
 import { art } from "@/lib/ascii";
 
 const BEAM_WIDTH = 8;
@@ -35,46 +35,52 @@ export function AsciiArt({
   const registerSpan = (el: HTMLSpanElement | null, d: number) => {
     if (!el) return;
     if (!spansByD.current.has(d)) spansByD.current.set(d, []);
+
     spansByD.current.get(d)!.push(el);
   };
 
-  useEffect(() => {
-    spansByD.current.clear();
-    let start: number | null = null;
-    let lastBeamMin: number | null = null;
+  const startAnimation = useCallback(
+    (node: HTMLPreElement | null) => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (!node) return;
 
-    const tick = (ts: number) => {
-      start ??= ts;
+      let start: number | null = null;
+      let lastBeamMin: number | null = null;
 
-      const elapsed = (ts - start) % (CYCLE + PAUSE);
-      const t = Math.max(0, elapsed - PAUSE / 2) / CYCLE;
+      const tick = (ts: number) => {
+        start ??= ts;
 
-      const beamCenter = t * (maxD + BEAM_WIDTH * 2) - BEAM_WIDTH;
-      const beamMin = Math.floor(beamCenter - BEAM_WIDTH / 2);
-      const beamMax = Math.floor(beamCenter + BEAM_WIDTH / 2);
+        const elapsed = (ts - start) % (CYCLE + PAUSE);
+        const t = Math.max(0, elapsed - PAUSE / 2) / CYCLE;
 
-      if (beamMin !== lastBeamMin) {
-        const prev = lastBeamMin ?? beamMin;
+        const beamCenter = t * (maxD + BEAM_WIDTH * 2) - BEAM_WIDTH;
+        const beamMin = Math.floor(beamCenter - BEAM_WIDTH / 2);
+        const beamMax = Math.floor(beamCenter + BEAM_WIDTH / 2);
 
-        for (let d = prev; d < beamMin; d++)
-          spansByD.current.get(d)?.forEach((el) => el.classList.remove("lit"));
-        for (let d = Math.max(prev + 1, beamMin); d <= beamMax; d++)
-          spansByD.current.get(d)?.forEach((el) => el.classList.add("lit"));
+        if (beamMin !== lastBeamMin) {
+          const prev = lastBeamMin ?? beamMin;
 
-        lastBeamMin = beamMin;
-      }
+          for (let d = prev; d < beamMin; d++)
+            spansByD.current
+              .get(d)
+              ?.forEach((el) => el.classList.remove("lit"));
+          for (let d = Math.max(prev + 1, beamMin); d <= beamMax; d++)
+            spansByD.current.get(d)?.forEach((el) => el.classList.add("lit"));
+
+          lastBeamMin = beamMin;
+        }
+
+        rafRef.current = requestAnimationFrame(tick);
+      };
 
       rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [maxD, variant]);
+    },
+    [maxD],
+  );
 
   return (
     <pre
+      ref={startAnimation}
       className={`text-xs select-none ${className ?? ""}`}
       aria-hidden="true"
     >
