@@ -1,4 +1,4 @@
-import { art } from "@/lib/ascii";
+import { AsciiArt } from "@/components/ascii-art";
 
 const links = [
   { label: "GitHub", href: "https://github.com/n0uveau" },
@@ -9,9 +9,9 @@ const links = [
 export default function Home() {
   return (
     <main className="flex flex-col flex-1 lg:flex-row gap-8 lg:gap-0 pt-8 lg:pt-0">
-      <div className="flex lg:flex-1 items-center justify-center text-muted px-8 select-none">
-        <pre className="text-xs hidden lg:block">{art.full}</pre>
-        <pre className="text-xs lg:hidden">{art.compact}</pre>
+      <div className="flex lg:flex-1 items-center justify-center text-muted px-8">
+        <AsciiArt variant="full" className="hidden lg:block" />
+        <AsciiArt variant="compact" className="lg:hidden" />
       </div>
 
       <div className="flex lg:flex-1 items-center justify-center">

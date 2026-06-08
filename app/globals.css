@@ -21,3 +21,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-fira-code), Helvetica, sans-serif;
 }
+
+.scanline-char {
+  opacity: 0.45;
+  transition: opacity 60ms linear;
+}
+
+.scanline-char.lit {
+  opacity: 1;
+  font-weight: 700;
+}
