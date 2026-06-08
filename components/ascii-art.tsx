@@ -12,9 +12,7 @@ type ArtVariant = keyof typeof art;
 function buildLines(text: string) {
   return text
     .split("\n")
-    .map((line, row) =>
-      line.split("").map((char, col) => ({ char, d: row + col })),
-    );
+    .map((line, row) => [...line].map((char, col) => ({ char, d: row + col })));
 }
 
 export function AsciiArt({
@@ -37,15 +35,11 @@ export function AsciiArt({
   const registerSpan = (el: HTMLSpanElement | null, d: number) => {
     if (!el) return;
     if (!spansByD.current.has(d)) spansByD.current.set(d, []);
-
     spansByD.current.get(d)!.push(el);
   };
 
   useEffect(() => {
     spansByD.current.clear();
-  }, [variant]);
-
-  useEffect(() => {
     let start: number | null = null;
     let lastBeamMin: number | null = null;
 
@@ -77,7 +71,7 @@ export function AsciiArt({
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [maxD]);
+  }, [maxD, variant]);
 
   return (
     <pre
