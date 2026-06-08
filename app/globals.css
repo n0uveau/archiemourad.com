@@ -3,11 +3,17 @@
 :root {
   --background: #36312c;
   --foreground: #ebd1b7;
+  --muted: #7a7267;
+  --accent: #db784d;
+  --link: #60a365;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
 }
 
 body {
