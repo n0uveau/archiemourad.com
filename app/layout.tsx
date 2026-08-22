@@ -1,12 +1,23 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Fira_Code } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const firaCode = Fira_Code({
+const firaCode = localFont({
+  src: "./fonts/FiraCode-VF.woff2",
   variable: "--font-fira-code",
-  subsets: ["latin"],
+  weight: "300 700",
+  style: "normal",
+  display: "swap",
+  adjustFontFallback: false,
+  fallback: [
+    "ui-monospace",
+    "SFMono-Regular",
+    "Menlo",
+    "Consolas",
+    "monospace",
+  ],
 });
 
 export const metadata: Metadata = {

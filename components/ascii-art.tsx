@@ -1,19 +1,13 @@
 "use client";
 
-import { useRef, useMemo, useCallback } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { art } from "@/lib/ascii";
 
-const BEAM_WIDTH = 8;
+const BEAM_WIDTH = 10;
 const CYCLE = 3000;
 const PAUSE = 800;
 
 type ArtVariant = keyof typeof art;
-
-function buildLines(text: string) {
-  return text
-    .split("\n")
-    .map((line, row) => [...line].map((char, col) => ({ char, d: row + col })));
-}
 
 export function AsciiArt({
   variant,
@@ -22,70 +16,102 @@ export function AsciiArt({
   variant: ArtVariant;
   className?: string;
 }) {
-  const spansByD = useRef<Map<number, HTMLSpanElement[]>>(new Map());
-  const rafRef = useRef<number | null>(null);
+  const spansByD = useRef<HTMLSpanElement[][]>([]);
 
-  const lines = useMemo(() => buildLines(art[variant]), [variant]);
+  const lines = useMemo(
+    () =>
+      art[variant]
+        .split("\n")
+        .map((line, row) =>
+          [...line].map((char, col) => ({ char, d: row + col })),
+        ),
+    [variant],
+  );
 
   const maxD = useMemo(
-    () => Math.max(...lines.flatMap((line) => line.map((t) => t.d))),
+    () => Math.max(...lines.map((line, row) => row + line.length - 1)),
     [lines],
   );
 
-  const registerSpan = (el: HTMLSpanElement | null, d: number) => {
+  const registerSpan = useCallback((el: HTMLSpanElement | null, d: number) => {
     if (!el) return;
-    if (!spansByD.current.has(d)) spansByD.current.set(d, []);
 
-    spansByD.current.get(d)!.push(el);
-  };
+    const group = (spansByD.current[d] ??= []);
+    group.push(el);
 
-  const startAnimation = useCallback(
+    return () => {
+      group.splice(group.indexOf(el), 1);
+    };
+  }, []);
+
+  const runBeam = useCallback(
     (node: HTMLPreElement | null) => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      if (!node) return;
+      if (!node || matchMedia("(prefers-reduced-motion: reduce)").matches)
+        return;
 
+      let raf = 0;
       let start: number | null = null;
-      let lastBeamMin: number | null = null;
+      let last: number | null = null;
+
+      const setLit = (d: number, lit: boolean) => {
+        const group = spansByD.current[d];
+        if (group) for (const el of group) el.classList.toggle("lit", lit);
+      };
 
       const tick = (ts: number) => {
         start ??= ts;
 
         const elapsed = (ts - start) % (CYCLE + PAUSE);
-        const t = Math.max(0, elapsed - PAUSE / 2) / CYCLE;
+        const progress = Math.max(0, elapsed - PAUSE / 2) / CYCLE;
+        const center = progress * (maxD + BEAM_WIDTH * 2) - BEAM_WIDTH;
+        const min = Math.floor(center - BEAM_WIDTH / 2);
+        const max = Math.floor(center + BEAM_WIDTH / 2);
 
-        const beamCenter = t * (maxD + BEAM_WIDTH * 2) - BEAM_WIDTH;
-        const beamMin = Math.floor(beamCenter - BEAM_WIDTH / 2);
-        const beamMax = Math.floor(beamCenter + BEAM_WIDTH / 2);
+        if (min !== last) {
+          const prev = last ?? min;
 
-        if (beamMin !== lastBeamMin) {
-          const prev = lastBeamMin ?? beamMin;
+          for (let d = prev; d < min; d++) setLit(d, false);
+          for (let d = Math.max(prev + 1, min); d <= max; d++) setLit(d, true);
 
-          for (let d = prev; d < beamMin; d++)
-            spansByD.current
-              .get(d)
-              ?.forEach((el) => el.classList.remove("lit"));
-          for (let d = Math.max(prev + 1, beamMin); d <= beamMax; d++)
-            spansByD.current.get(d)?.forEach((el) => el.classList.add("lit"));
-
-          lastBeamMin = beamMin;
+          last = min;
         }
 
-        rafRef.current = requestAnimationFrame(tick);
+        raf = requestAnimationFrame(tick);
       };
 
-      rafRef.current = requestAnimationFrame(tick);
+      const observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting === raf > 0) return;
+
+        if (entry.isIntersecting) {
+          raf = requestAnimationFrame(tick);
+          return;
+        }
+
+        cancelAnimationFrame(raf);
+        raf = 0;
+        start = last = null;
+
+        for (const el of spansByD.current.flat()) el.classList.remove("lit");
+      });
+
+      observer.observe(node);
+
+      return () => {
+        observer.disconnect();
+        cancelAnimationFrame(raf);
+      };
     },
     [maxD],
   );
 
   return (
     <pre
-      ref={startAnimation}
-      className={`text-xs select-none ${className ?? ""}`}
+      ref={runBeam}
+      className={`scanline text-xs select-none ${className ?? ""}`}
       aria-hidden="true"
     >
       {lines.map((line, row) => (
-        <span key={row} style={{ display: "block" }}>
+        <span key={row} className="block">
           {line.map(({ char, d }, col) =>
             char === " " ? (
               char

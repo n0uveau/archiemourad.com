@@ -19,15 +19,31 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-fira-code), Helvetica, sans-serif;
+  font-family:
+    var(--font-fira-code), ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
+  font-synthesis-weight: none;
+}
+
+.scanline {
+  font-family: inherit;
+  contain: layout paint;
+  font-variant-ligatures: none;
 }
 
 .scanline-char {
-  opacity: 0.45;
-  transition: opacity 60ms linear;
+  color: color-mix(in srgb, currentColor 45%, var(--background));
+  transition: color 60ms linear;
 }
 
 .scanline-char.lit {
-  opacity: 1;
-  font-weight: 700;
+  color: inherit;
+  -webkit-text-stroke: 0.4px currentColor;
+  paint-order: stroke fill;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanline-char {
+    color: inherit;
+  }
 }
