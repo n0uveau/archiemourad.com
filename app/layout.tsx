@@ -20,8 +20,36 @@ const firaCode = localFont({
   ],
 });
 
+const description =
+  "Archie Mourad — graphics and systems programming in C++ and Rust.";
+
+const person = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Archie Mourad",
+  url: "https://www.archiemourad.com",
+  sameAs: [
+    "https://github.com/n0uveau",
+    "https://www.linkedin.com/in/archiemourad",
+  ],
+};
+
 export const metadata: Metadata = {
-  title: "archiemourad.com",
+  metadataBase: new URL("https://www.archiemourad.com"),
+  title: {
+    default: "Archie Mourad",
+    template: "%s — Archie Mourad",
+  },
+  description,
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Archie Mourad",
+    description,
+    url: "https://www.archiemourad.com",
+    siteName: "Archie Mourad",
+    type: "profile",
+    locale: "en_AU",
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +60,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${firaCode.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(person) }}
+        />
         {children}
         <Analytics />
         <SpeedInsights />

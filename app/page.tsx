@@ -9,14 +9,20 @@ const links = [
 export default function Home() {
   return (
     <main className="flex flex-col flex-1 lg:flex-row gap-8 lg:gap-0 pt-8 lg:pt-0">
-      <div className="flex lg:flex-1 items-center justify-center text-muted px-8">
+      <div
+        aria-hidden
+        className="flex lg:flex-1 items-center justify-center text-muted px-8"
+      >
         <AsciiArt variant="full" className="hidden lg:block" />
         <AsciiArt variant="compact" className="lg:hidden" />
       </div>
 
       <div className="flex lg:flex-1 items-center justify-center">
         <div className="flex flex-col px-4 py-1 border border-muted">
-          <span className="text-center mb-1">archiemourad.com</span>
+          <div className="flex flex-col text-center mb-2">
+            <h1>Archie Mourad</h1>
+            <span className="text-muted text-xs">archiemourad.com</span>
+          </div>
 
           <nav className="leading-tight">
             {links.map(({ label, href }) => (
@@ -28,7 +34,7 @@ export default function Home() {
                   rel={
                     href.startsWith("mailto:")
                       ? undefined
-                      : "noopener noreferrer"
+                      : "me noopener noreferrer"
                   }
                   className="text-link no-underline hover:underline"
                 >
